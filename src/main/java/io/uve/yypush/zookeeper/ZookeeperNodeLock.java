@@ -16,20 +16,20 @@ import com.google.common.collect.Lists;
  */
 public enum ZookeeperNodeLock {
 	instance;
-	private final Lock lock = new ReentrantLock(); 
+	private final Lock lock = new ReentrantLock();
 	private final Condition c = lock.newCondition();
 	public final List<ChangeNode> changeStatus = Lists.newArrayList();
 	public boolean needReload = false;
-	
-	public void lock(){
+
+	public void lock() {
 		lock.lock();
 	}
-	
-	public void unlock(){
+
+	public void unlock() {
 		lock.unlock();
 	}
-	
-	public void signalAll(){
+
+	public void signalAll() {
 		c.signalAll();
 	}
 
@@ -40,5 +40,5 @@ public enum ZookeeperNodeLock {
 
 	public void await() throws InterruptedException {
 		c.await();
-	}	
+	}
 }

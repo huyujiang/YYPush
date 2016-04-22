@@ -11,42 +11,42 @@ import java.util.concurrent.locks.ReentrantLock;
  */
 public enum ZkMonitorPath {
 	instance;
-	public final Lock lock = new ReentrantLock(); 
+	public final Lock lock = new ReentrantLock();
 	public final Condition c = lock.newCondition();
-	
-	public boolean register(String name){
+
+	public boolean register(String name) {
 		try {
 			lock.lock();
 			boolean succ = false;
-			while(!succ){				
+			while (!succ) {
 				succ = ZkFactory.getZkConfig().register(name);
 			}
 			return true;
 		} catch (Exception e) {
 			e.printStackTrace();
-		}finally{
+		} finally {
 			lock.unlock();
-		}	
+		}
 		return false;
 	}
-	
-	public boolean cancel(String name){
+
+	public boolean cancel(String name) {
 		try {
 			lock.lock();
 			boolean succ = false;
-			while(!succ){
+			while (!succ) {
 				succ = ZkFactory.getZkConfig().cancel(name);
 			}
 			return true;
 		} catch (Exception e) {
 			e.printStackTrace();
-		}finally{
+		} finally {
 			lock.unlock();
 		}
 		return false;
 	}
-	
-	public void heart(String name){
+
+	public void heart(String name) {
 		ZkFactory.getZkConfig().heart(name);
 	}
 }

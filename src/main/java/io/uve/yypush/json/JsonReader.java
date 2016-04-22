@@ -10,11 +10,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  */
 public class JsonReader {
 	private static final ObjectMapper mapper = new ObjectMapper();
-	static{
-		mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES  , false);
+	static {
+		mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 	}
-	
-	public static ObjectMapper getObjectMapper(){
+
+	public static ObjectMapper getObjectMapper() {
 		return mapper;
 	}
 }

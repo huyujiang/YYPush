@@ -8,20 +8,22 @@ import org.apache.log4j.Logger;
 
 /**
  * must be thread safe
+ * 
  * @author yangyang21
  *
  */
 public class KafkaSet {
 	private final static Logger log = Logger.getLogger(KafkaSet.class);
 	private final static ConcurrentHashMap<String, KafkaClient> kafkaMap = new ConcurrentHashMap<String, KafkaClient>();
-	private final static ReentrantLock lock = new ReentrantLock(); 
-	public static KafkaClient getKafkaProducer(String kafkaName, Properties kafkaProducerProps){
+	private final static ReentrantLock lock = new ReentrantLock();
+
+	public static KafkaClient getKafkaProducer(String kafkaName, Properties kafkaProducerProps) {
 		KafkaClient client = kafkaMap.get(kafkaName);
-		if(client == null){
+		if (client == null) {
 			try {
 				lock.lock();
 				client = kafkaMap.get(kafkaName);
-				if(client == null){
+				if (client == null) {
 					client = new KafkaClient(kafkaProducerProps);
 					kafkaMap.put(kafkaName, client);
 					return client;

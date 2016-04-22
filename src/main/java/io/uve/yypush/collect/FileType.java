@@ -22,130 +22,130 @@ import org.joda.time.DateTime;
  * 
  */
 public enum FileType {
-	ACCESS{
-		
+	ACCESS {
+
 	},
-	ERROR{
-		
+	ERROR {
+
 	},
-	SUBREQ{
+	SUBREQ {
 		@Override
 		public boolean checkFile(long l, Config config) {
 			DateTime dateTime = new DateTime(l);
 			String date = dateTime.toString("_yyyy-MM-dd-HH");
 			Path startingDir = Paths.get(config.basePath + "/" + config.suffix + date);
 			boolean exist = Files.exists(startingDir, LinkOption.NOFOLLOW_LINKS);
-			if(exist){
+			if (exist) {
 				return true;
-			}else {
+			} else {
 				DateTime now = new DateTime();
-				if(now.getDayOfYear() != dateTime.getDayOfYear()){
+				if (now.getDayOfYear() != dateTime.getDayOfYear()) {
 					log.info("cross a date! and last file has been remove: " + startingDir);
 					startingDir = Paths.get(config.basePath + "/" + config.suffix);
 					exist = Files.exists(startingDir, LinkOption.NOFOLLOW_LINKS);
-					if(exist){
+					if (exist) {
 						try {
 							long cur = Files.getLastModifiedTime(startingDir, LinkOption.NOFOLLOW_LINKS).toMillis();
 							DateTime lastModify = new DateTime(cur);
-							if(lastModify.getMillisOfDay() > 30000){
+							if (lastModify.getMillisOfDay() > 30000) {
 								return true;
 							}
 						} catch (IOException e) {
 							return false;
 						}
-						
+
 					}
 				}
 			}
 			return false;
 		}
 	},
-	DIR{
+	DIR {
 		public boolean checkFile(long l, Config config) {
-			//except next hour!
+			// except next hour!
 			l = l + HOUR;
 			DateTime dateTime = new DateTime(l);
 			int hour = dateTime.getHourOfDay();
-		 	String date = dateTime.toString("yyyy-MM-dd");
-		 	Path startingDir = Paths.get(config.basePath + "/" + date + "/" + String.format("%02d", hour));
-		 	boolean exist = Files.exists(startingDir, LinkOption.NOFOLLOW_LINKS);
-		 	if(exist){
-			 	try {
-			 		List<Path> result = new LinkedList<Path>();
+			String date = dateTime.toString("yyyy-MM-dd");
+			Path startingDir = Paths.get(config.basePath + "/" + date + "/" + String.format("%02d", hour));
+			boolean exist = Files.exists(startingDir, LinkOption.NOFOLLOW_LINKS);
+			if (exist) {
+				try {
+					List<Path> result = new LinkedList<Path>();
 					Files.walkFileTree(startingDir, new FindJavaVisitor(result, config.suffix));
-					if(result.size() == 10){
+					if (result.size() == 10) {
 						return true;
 					}
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
-			 	log.info("try next file: not exist!");
-		 	}
+				log.info("try next file: not exist!");
+			}
 			return false;
 		}
-		
+
 		@Override
-		public Collector getNewCollector(){
+		public Collector getNewCollector() {
 			return new DirLogCollector();
 		}
-		
+
 	};
-	
+
 	public final long HOUR = 3600 * 1000;
-	
+
 	protected static Logger log = Logger.getLogger(FileType.class);
-	
-	//access
+
+	// access
 	public boolean check(long curTime, Config config) throws InterruptedException {
 		DateTime now = new DateTime();
 		DateTime cur = new DateTime(curTime);
-		if(now.getHourOfDay() == cur.getHourOfDay()){
+		if (now.getHourOfDay() == cur.getHourOfDay()) {
 			Thread.sleep(2000);
 			return false;
-		}else {
+		} else {
 			return checkFile(curTime, config);
 		}
 	}
 
 	public boolean checkFile(long l, Config config) {
 		DateTime dateTime = new DateTime(l);
-	 	String date = dateTime.toString("_yyyy-MM-dd-HH");
-	 	Path startingDir = Paths.get(config.basePath + "/" + config.suffix + date + ".gz");
-	 	boolean exist = Files.exists(startingDir, LinkOption.NOFOLLOW_LINKS);
-	 	if(exist){
-	 		return true;
-	 	}else {
+		String date = dateTime.toString("_yyyy-MM-dd-HH");
+		Path startingDir = Paths.get(config.basePath + "/" + config.suffix + date + ".gz");
+		boolean exist = Files.exists(startingDir, LinkOption.NOFOLLOW_LINKS);
+		if (exist) {
+			return true;
+		} else {
 			DateTime now = new DateTime();
-			if(now.getDayOfYear() != dateTime.getDayOfYear()){
+			if (now.getDayOfYear() != dateTime.getDayOfYear()) {
 				log.info("cross a date! and last file has been remove: " + startingDir);
 				startingDir = Paths.get(config.basePath + "/" + config.suffix);
 				exist = Files.exists(startingDir, LinkOption.NOFOLLOW_LINKS);
-				if(exist){
+				if (exist) {
 					try {
 						long cur = Files.getLastModifiedTime(startingDir, LinkOption.NOFOLLOW_LINKS).toMillis();
 						DateTime lastModify = new DateTime(cur);
-						if(lastModify.getMillisOfDay() > 30000){
+						if (lastModify.getMillisOfDay() > 30000) {
 							return true;
 						}
 					} catch (IOException e) {
 						return false;
 					}
-					
+
 				}
 			}
 		}
 		return false;
 	}
-	
+
 	public static class FindJavaVisitor extends SimpleFileVisitor<Path> {
-		private String suffix; 
-		private List<Path> result;		
-		
+		private String suffix;
+		private List<Path> result;
+
 		public FindJavaVisitor(List<Path> result, String suffix) {
 			this.result = result;
 			this.suffix = suffix;
 		}
-		
+
 		@Override
 		public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
 			if (file.toString().endsWith(suffix)) {
@@ -154,8 +154,8 @@ public enum FileType {
 			return FileVisitResult.CONTINUE;
 		}
 	}
-	
-	public Collector getNewCollector(){
+
+	public Collector getNewCollector() {
 		return new FileLogColloector();
 	}
 }

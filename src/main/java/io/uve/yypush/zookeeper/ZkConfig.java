@@ -35,7 +35,7 @@ public class ZkConfig implements Watcher {
 	public final static String zkBaseMonitor = "/logpushMonitor";
 	public ZooKeeper zk = null;
 	public Stat stat = null;
-	
+
 	public ZkConfig(String connectStr) {
 		try {
 			this.zk = new ZooKeeper(connectStr, 6000, this);
@@ -44,21 +44,21 @@ public class ZkConfig implements Watcher {
 			log.info("init zookeeper failed");
 		}
 	}
-	
+
 	@Override
 	public void process(WatchedEvent event) {
-		if(KeeperState.SyncConnected == event.getState()){
-			if(EventType.None == event.getType() && null == event.getPath()){
-				
-			}else if (event.getType() == EventType.NodeChildrenChanged) {
+		if (KeeperState.SyncConnected == event.getState()) {
+			if (EventType.None == event.getType() && null == event.getPath()) {
+
+			} else if (event.getType() == EventType.NodeChildrenChanged) {
 				try {
 					ZookeeperNodeLock.instance.lock();
 					List<String> ss = zk.getChildren(event.getPath(), true);
-					if(ss == null){
+					if (ss == null) {
 						ss = Lists.newArrayList();
 					}
 					log.info("reget config name:" + ss);
-					
+
 					ChangeNode node = new ChangeNode();
 					Map<String, String> map = Maps.newHashMap();
 					for (String s : ss) {
@@ -70,15 +70,15 @@ public class ZkConfig implements Watcher {
 					node.setChilds(ss);
 					node.setUseMap(false);
 					node.setMap(map);
-					
+
 					ZookeeperNodeLock.instance.addchange(node);
 				} catch (Exception e) {
 					log.info("notify load config error!");
-				}finally{
+				} finally {
 					ZookeeperNodeLock.instance.signalAll();
 					ZookeeperNodeLock.instance.unlock();
 				}
-			}else if (event.getType() == EventType.NodeDataChanged) {
+			} else if (event.getType() == EventType.NodeDataChanged) {
 				try {
 					ZookeeperNodeLock.instance.lock();
 					String name = event.getPath();
@@ -88,11 +88,11 @@ public class ZkConfig implements Watcher {
 
 					ChangeNode node = new ChangeNode();
 					Map<String, String> map = Maps.newHashMap();
-					map.put(name, configStr);					
+					map.put(name, configStr);
 					node.setChilds(null);
 					node.setUseMap(true);
 					node.setMap(map);
-					
+
 					ZookeeperNodeLock.instance.addchange(node);
 				} catch (KeeperException e) {
 					e.printStackTrace();
@@ -103,10 +103,10 @@ public class ZkConfig implements Watcher {
 					ZookeeperNodeLock.instance.unlock();
 				}
 			}
-		}else if(KeeperState.Expired == event.getState()){
+		} else if (KeeperState.Expired == event.getState()) {
 			log.info("zookeeper expared and begin to restart");
 			ZookeeperNodeLock.instance.lock();
-			ZkFactory.expare();
+			ZkFactory.expire();
 			log.info("zookeeper remove old zookeeper client");
 			ZkFactory.getZkConfig();
 			log.info("zookeeper restart finished");
@@ -114,33 +114,34 @@ public class ZkConfig implements Watcher {
 			ZookeeperNodeLock.instance.unlock();
 		}
 	}
-	
-	public Map<String, Config> LoadingConfig() throws IOException {	
+
+	public Map<String, Config> LoadingConfig() throws IOException {
 		final Map<String, Config> configs = Maps.newHashMap();
-	    this.stat = new Stat();
+		this.stat = new Stat();
 		List<String> cl = null;
 		try {
 			cl = zk.getChildren(zkBase, true);
 		} catch (KeeperException | InterruptedException e1) {
 			e1.printStackTrace();
 		}
-		if(cl == null || cl.size() == 0){
+		if (cl == null || cl.size() == 0) {
 			log.info("load config from zookeeper null");
-		}else {
-			for(String k : cl){
+		} else {
+			for (String k : cl) {
 				String son = zkBase + '/' + k;
-				String confStr = null;;
-				
+				String confStr = null;
+				;
+
 				try {
 					confStr = new String(zk.getData(son, true, stat));
 				} catch (KeeperException | InterruptedException e) {
 					e.printStackTrace();
 				}
-				
-				if(confStr != null && !confStr.isEmpty()){				
+
+				if (confStr != null && !confStr.isEmpty()) {
 					try {
 						Config config = JsonReader.getObjectMapper().readValue(confStr, Config.class);
-						config.name = son;	
+						config.name = son;
 						configs.put(son, config);
 						log.info("load config success: " + k);
 					} catch (IOException e) {
@@ -154,34 +155,34 @@ public class ZkConfig implements Watcher {
 		return configs;
 	}
 
-	public void createFather(){
+	public void createFather() {
 		final String ip = Sailing.acceptIp.get();
 		try {
 			Stat tmpstat = this.zk.exists(zkBaseMonitor, false);
-			if(tmpstat == null){
+			if (tmpstat == null) {
 				this.zk.create(zkBaseMonitor, "".getBytes(), Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
 			}
-			
-			tmpstat = this.zk.exists(zkBaseMonitor + "/" + ip , false);
-			if(tmpstat == null){
-				this.zk.create(zkBaseMonitor  + "/" + ip, "".getBytes(), Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
+
+			tmpstat = this.zk.exists(zkBaseMonitor + "/" + ip, false);
+			if (tmpstat == null) {
+				this.zk.create(zkBaseMonitor + "/" + ip, "".getBytes(), Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
 			}
 		} catch (KeeperException | InterruptedException e) {
 			e.printStackTrace();
 		}
 	}
-	
+
 	public boolean register(String name) throws InterruptedException {
 		final String ip = Sailing.acceptIp.get();
 		try {
 			createFather();
-			String namePath = zkBaseMonitor  + "/" + ip + "/" + name.replace('/', '.').substring(zkBase.length() + 1);
+			String namePath = zkBaseMonitor + "/" + ip + "/" + name.replace('/', '.').substring(zkBase.length() + 1);
 			Stat tmpstat = this.zk.exists(namePath, false);
-			if(tmpstat != null){
+			if (tmpstat != null) {
 				Thread.sleep(6000L);
 				tmpstat = this.zk.exists(namePath, false);
 			}
-			if(tmpstat == null){
+			if (tmpstat == null) {
 				this.zk.create(namePath, "".getBytes(), Ids.OPEN_ACL_UNSAFE, CreateMode.EPHEMERAL);
 				log.info("thread register successful:" + namePath);
 			}
@@ -192,18 +193,18 @@ public class ZkConfig implements Watcher {
 			return false;
 		}
 	}
-	
+
 	public boolean cancel(String name) throws InterruptedException {
 		final String ip = Sailing.acceptIp.get();
 		try {
 			createFather();
-			String namePath = zkBaseMonitor  + "/" + ip + "/" + name.replace('/', '.').substring(zkBase.length() + 1);
+			String namePath = zkBaseMonitor + "/" + ip + "/" + name.replace('/', '.').substring(zkBase.length() + 1);
 			Stat tmpstat = this.zk.exists(namePath, false);
-			if(tmpstat != null){
+			if (tmpstat != null) {
 				this.zk.delete(namePath, -1);
 			}
 			return true;
-		} catch (KeeperException e) {			
+		} catch (KeeperException e) {
 			log.error("keeper Execption: retry!");
 			e.printStackTrace();
 			return false;
@@ -211,11 +212,11 @@ public class ZkConfig implements Watcher {
 	}
 
 	public void handleExpare() {
-		//add watch
+		// add watch
 		try {
 			log.info("handling expare stat");
 			this.LoadingConfig();
-			for(String key : Sailing.threadMap.keySet()){
+			for (String key : Sailing.threadMap.keySet()) {
 				this.register(key);
 			}
 		} catch (IOException e) {
@@ -227,13 +228,13 @@ public class ZkConfig implements Watcher {
 
 	public void heart(String name) {
 		final String ip = Sailing.acceptIp.get();
-		String namePath = zkBaseMonitor  + "/" + ip + "/" + name.replace('/', '.').substring(zkBase.length() + 1);
+		String namePath = zkBaseMonitor + "/" + ip + "/" + name.replace('/', '.').substring(zkBase.length() + 1);
 		try {
 			this.zk.setData(namePath, new DateTime().toString().getBytes(), -1);
-		} catch (KeeperException e1){
+		} catch (KeeperException e1) {
 			e1.printStackTrace();
 		} catch (InterruptedException e) {
-			//fix bug
+			// fix bug
 			log.info("when heart I recv a inter!");
 			Thread.currentThread().interrupt();
 		}

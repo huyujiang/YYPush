@@ -6,27 +6,27 @@ package io.uve.yypush.zookeeper;
  * 
  */
 public class ZkFactory {
-	private static volatile boolean expare = false;
+	private static volatile boolean expire = false;
 	private static volatile ZkConfig zkConfig = null;
-	private final static String connectStr; 
-	
+	private final static String connectStr;
+
 	static {
 		String zookeeper = System.getenv("zookeeper");
-		if(zookeeper == null){
-			connectStr	= "172.16.89.130:2181,172.16.89.128:2181,172.16.89.129:2181";
-		}else {
+		if (zookeeper == null) {
+			connectStr = "172.16.89.130:2181,172.16.89.128:2181,172.16.89.129:2181";
+		} else {
 			connectStr = zookeeper;
 		}
 	}
-	
-	public static ZkConfig getZkConfig(){		
-		if(zkConfig == null){
-			synchronized(ZkFactory.class){
-				if(zkConfig == null){
+
+	public static ZkConfig getZkConfig() {
+		if (zkConfig == null) {
+			synchronized (ZkFactory.class) {
+				if (zkConfig == null) {
 					ZkConfig tmp = new ZkConfig(connectStr);
-					if(expare){
+					if (expire) {
 						tmp.handleExpare();
-						expare = false;
+						expire = false;
 					}
 					zkConfig = tmp;
 				}
@@ -34,10 +34,10 @@ public class ZkFactory {
 		}
 		return zkConfig;
 	}
-	
-	public static void expare(){
-		synchronized(ZkFactory.class){
-			expare = true;
+
+	public static void expire() {
+		synchronized (ZkFactory.class) {
+			expire = true;
 			zkConfig = null;
 		}
 	}

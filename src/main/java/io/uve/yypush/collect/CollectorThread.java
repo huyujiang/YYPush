@@ -16,9 +16,9 @@ import org.apache.log4j.Logger;
  * @author yangyang21@staff.weibo.com(yangyang)
  * 
  */
-public class CollectorThread implements Runnable{
+public class CollectorThread implements Runnable {
 	private static Logger log = Logger.getLogger(CollectorThread.class);
-	private final CountDownLatch countDownLatch = new CountDownLatch(1); 
+	private final CountDownLatch countDownLatch = new CountDownLatch(1);
 	private Future<?> future = null;
 
 	public void setFuture(Future<?> future) {
@@ -26,7 +26,7 @@ public class CollectorThread implements Runnable{
 	}
 
 	private Config config;
-	
+
 	public Config getConfig() {
 		return config;
 	}
@@ -38,17 +38,17 @@ public class CollectorThread implements Runnable{
 	public CollectorThread(Config config) {
 		this.config = config;
 	}
-	
+
 	@Override
 	public void run() {
 		Collector lc = null;
 		try {
 			lc = Collector.build(config);
-			if(lc == null){
-				log.info("thread collector failed: " + config.name);				
-			}else{
+			if (lc == null) {
+				log.info("thread collector failed: " + config.name);
+			} else {
 				log.info("thread collector process success: " + config.name);
-				if(ZkMonitorPath.instance.register(config.name)){
+				if (ZkMonitorPath.instance.register(config.name)) {
 					lc.process();
 				}
 			}
@@ -59,8 +59,8 @@ public class CollectorThread implements Runnable{
 			countDownLatch.countDown();
 		}
 	}
-	
-	public void stop(){
+
+	public void stop() {
 		try {
 			future.cancel(true);
 			log.info("send interrupte to thread:" + config.name + ", waiting for stop");
