@@ -17,7 +17,10 @@ public enum ZkMonitorPath {
 	public boolean register(String name){
 		try {
 			lock.lock();
-			ZkFactory.getZkConfig().register(name);
+			boolean succ = false;
+			while(!succ){				
+				succ = ZkFactory.getZkConfig().register(name);
+			}
 			return true;
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -30,7 +33,10 @@ public enum ZkMonitorPath {
 	public boolean cancel(String name){
 		try {
 			lock.lock();
-			ZkFactory.getZkConfig().cancel(name);
+			boolean succ = false;
+			while(!succ){
+				succ = ZkFactory.getZkConfig().cancel(name);
+			}
 			return true;
 		} catch (Exception e) {
 			e.printStackTrace();

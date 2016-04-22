@@ -171,7 +171,7 @@ public class ZkConfig implements Watcher {
 		}
 	}
 	
-	public void register(String name) {
+	public boolean register(String name) throws InterruptedException {
 		final String ip = Sailing.acceptIp.get();
 		try {
 			createFather();
@@ -179,17 +179,21 @@ public class ZkConfig implements Watcher {
 			Stat tmpstat = this.zk.exists(namePath, false);
 			if(tmpstat != null){
 				Thread.sleep(6000L);
+				tmpstat = this.zk.exists(namePath, false);
 			}
 			if(tmpstat == null){
 				this.zk.create(namePath, "".getBytes(), Ids.OPEN_ACL_UNSAFE, CreateMode.EPHEMERAL);
 				log.info("thread register successful:" + namePath);
 			}
-		} catch (KeeperException | InterruptedException e) {
+			return true;
+		} catch (KeeperException e) {
 			e.printStackTrace();
+			log.error("keeper Execption: retry!");
+			return false;
 		}
 	}
 	
-	public void cancel(String name) {
+	public boolean cancel(String name) throws InterruptedException {
 		final String ip = Sailing.acceptIp.get();
 		try {
 			createFather();
@@ -198,8 +202,11 @@ public class ZkConfig implements Watcher {
 			if(tmpstat != null){
 				this.zk.delete(namePath, -1);
 			}
-		} catch (KeeperException | InterruptedException e) {
+			return true;
+		} catch (KeeperException e) {			
+			log.error("keeper Execption: retry!");
 			e.printStackTrace();
+			return false;
 		}
 	}
 
@@ -212,6 +219,8 @@ public class ZkConfig implements Watcher {
 				this.register(key);
 			}
 		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
 	}
