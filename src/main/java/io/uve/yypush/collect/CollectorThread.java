@@ -48,8 +48,9 @@ public class CollectorThread implements Runnable{
 				log.info("thread collector failed: " + config.name);				
 			}else{
 				log.info("thread collector process success: " + config.name);
-				ZkMonitorPath.instance.register(config.name);
-				lc.process();
+				if(ZkMonitorPath.instance.register(config.name)){
+					lc.process();
+				}
 			}
 		} catch (ExecutionException | TimeoutException | IOException e) {
 			e.printStackTrace();

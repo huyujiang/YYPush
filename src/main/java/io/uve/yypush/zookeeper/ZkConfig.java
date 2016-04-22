@@ -177,6 +177,9 @@ public class ZkConfig implements Watcher {
 			createFather();
 			String namePath = zkBaseMonitor  + "/" + ip + "/" + name.replace('/', '.').substring(zkBase.length() + 1);
 			Stat tmpstat = this.zk.exists(namePath, false);
+			if(tmpstat != null){
+				Thread.sleep(6000L);
+			}
 			if(tmpstat == null){
 				this.zk.create(namePath, "".getBytes(), Ids.OPEN_ACL_UNSAFE, CreateMode.EPHEMERAL);
 				log.info("thread register successful:" + namePath);
