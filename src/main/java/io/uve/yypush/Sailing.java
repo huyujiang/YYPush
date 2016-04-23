@@ -116,8 +116,10 @@ public class Sailing {
 					while (iter.hasNext()) {
 						Map.Entry<String, CollectorThread> entry = (Map.Entry<String, CollectorThread>) iter.next();
 						if (!names.contains(entry.getKey())) {
+							log.info("begin stop and remove thread :" + entry.getKey() + ":because node has remove");
 							entry.getValue().stop();
 							iter.remove();
+							log.info("success stop and remove thread :" + entry.getKey());
 						}
 					}
 				}
