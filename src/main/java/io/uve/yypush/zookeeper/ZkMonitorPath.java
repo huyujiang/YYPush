@@ -1,8 +1,6 @@
 package io.uve.yypush.zookeeper;
 
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
+import org.apache.log4j.Logger;
 
 /**
  * 
@@ -11,41 +9,41 @@ import java.util.concurrent.locks.ReentrantLock;
  */
 public enum ZkMonitorPath {
 	instance;
-	public final Lock lock = new ReentrantLock();
-	public final Condition c = lock.newCondition();
+	private static Logger log = Logger.getLogger(ZkMonitorPath.class);
 
 	public boolean register(String name) {
 		try {
-			lock.lock();
 			boolean succ = false;
 			while (!succ) {
 				succ = ZkFactory.getZkConfig().register(name);
+				if(!succ){
+					log.error("cancel" + name + "keeper Execption: will retry 2s later!");
+					Thread.sleep(2000L);
+				}
 			}
 			return true;
-		} catch (Exception e) {
-			e.printStackTrace();
-		} finally {
-			lock.unlock();
+		} catch (InterruptedException e) {
+			log.info("may recv interrupt and regisetr fail");
 		}
 		return false;
 	}
 
 	public boolean cancel(String name) {
 		try {
-			lock.lock();
 			boolean succ = false;
 			while (!succ) {
 				succ = ZkFactory.getZkConfig().cancel(name);
+				if(!succ){
+					log.error("canel" + name + "keeper Execption: will retry 2s later!");
+					Thread.sleep(2000L);
+				}
 			}
 			return true;
-		} catch (Exception e) {
-			e.printStackTrace();
-		} finally {
-			lock.unlock();
+		} catch (InterruptedException e) {
+			log.info("may recv interrupt and regisetr fail");
 		}
 		return false;
 	}
-
 	public void heart(String name) {
 		ZkFactory.getZkConfig().heart(name);
 	}

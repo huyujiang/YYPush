@@ -28,6 +28,7 @@ import org.apache.log4j.Logger;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import org.apache.zookeeper.KeeperException;
 
 /**
  * 
@@ -63,12 +64,16 @@ public class Sailing {
 	}
 
 	private Map<String, Config> loadConfig() {
-		try {
-			return ZkFactory.getZkConfig().LoadingConfig();
-		} catch (IOException e) {
-			e.printStackTrace();
+		for(;;) {
+			try {
+				return ZkFactory.getZkConfig().LoadingConfig();
+			} catch (InterruptedException e) {
+				log.info("main thread load config has been inter and retry");
+			} catch (KeeperException e) {
+				e.printStackTrace();
+				log.info("main thread load config has throw keeper exception and retry!");
+			}
 		}
-		return null;
 	}
 
 	private void reloadConfigs() {

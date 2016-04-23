@@ -6,13 +6,11 @@ import io.uve.yypush.kafka.KafkaClient;
 import io.uve.yypush.kafka.KafkaSet;
 import io.uve.yypush.model.FileNode;
 import io.uve.yypush.zookeeper.ZkMonitorPath;
+import org.joda.time.DateTime;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
-
-import org.joda.time.DateTime;
 
 /**
  * 
@@ -63,7 +61,7 @@ public abstract class Collector {
 
 	public abstract boolean load(DateTime dateTime, boolean first) throws IOException;
 
-	public abstract void process() throws IOException, ExecutionException, TimeoutException;
+	public abstract void process() throws IOException, ExecutionException;
 
 	// must be thread safe
 	public static Collector build(Config config) throws IOException {

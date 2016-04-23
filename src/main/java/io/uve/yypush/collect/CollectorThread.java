@@ -2,14 +2,12 @@ package io.uve.yypush.collect;
 
 import io.uve.yypush.config.Config;
 import io.uve.yypush.zookeeper.ZkMonitorPath;
+import org.apache.log4j.Logger;
 
 import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
-import java.util.concurrent.TimeoutException;
-
-import org.apache.log4j.Logger;
 
 /**
  * 
@@ -39,6 +37,9 @@ public class CollectorThread implements Runnable {
 		this.config = config;
 	}
 
+	/**
+	 * every thread only been inter once!
+	 */
 	@Override
 	public void run() {
 		Collector lc = null;
@@ -50,9 +51,11 @@ public class CollectorThread implements Runnable {
 				log.info("thread collector process success: " + config.name);
 				if (ZkMonitorPath.instance.register(config.name)) {
 					lc.process();
+				}else{
+					log.info("register failed and exit:" + config.name);
 				}
 			}
-		} catch (ExecutionException | TimeoutException | IOException e) {
+		} catch (ExecutionException | IOException e) {
 			e.printStackTrace();
 		} finally {
 			ZkMonitorPath.instance.cancel(config.name);

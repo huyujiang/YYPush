@@ -47,7 +47,7 @@ public enum FileType {
 						try {
 							long cur = Files.getLastModifiedTime(startingDir, LinkOption.NOFOLLOW_LINKS).toMillis();
 							DateTime lastModify = new DateTime(cur);
-							if (lastModify.getMillisOfDay() > 30000) {
+							if (lastModify.getMillisOfDay() > 61000) {
 								return true;
 							}
 						} catch (IOException e) {
@@ -124,7 +124,7 @@ public enum FileType {
 					try {
 						long cur = Files.getLastModifiedTime(startingDir, LinkOption.NOFOLLOW_LINKS).toMillis();
 						DateTime lastModify = new DateTime(cur);
-						if (lastModify.getMillisOfDay() > 30000) {
+						if (lastModify.getMillisOfDay() > 61000) {
 							return true;
 						}
 					} catch (IOException e) {

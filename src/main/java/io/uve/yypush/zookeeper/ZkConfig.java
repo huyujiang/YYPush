@@ -8,6 +8,7 @@ import io.uve.yypush.model.ChangeNode;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.log4j.Logger;
 import org.apache.zookeeper.CreateMode;
@@ -35,6 +36,7 @@ public class ZkConfig implements Watcher {
 	public final static String zkBaseMonitor = "/logpushMonitor";
 	public ZooKeeper zk = null;
 	public Stat stat = null;
+	public final ReentrantLock fatherLock = new ReentrantLock();
 
 	public ZkConfig(String connectStr) {
 		try {
@@ -105,38 +107,22 @@ public class ZkConfig implements Watcher {
 			}
 		} else if (KeeperState.Expired == event.getState()) {
 			log.info("zookeeper expared and begin to restart");
-			ZookeeperNodeLock.instance.lock();
-			ZkFactory.expire();
-			log.info("zookeeper remove old zookeeper client");
-			ZkFactory.getZkConfig();
+			ZkFactory.resetZkConfig();
 			log.info("zookeeper restart finished");
-			ZookeeperNodeLock.instance.signalAll();
-			ZookeeperNodeLock.instance.unlock();
 		}
 	}
 
-	public Map<String, Config> LoadingConfig() throws IOException {
+	public Map<String, Config> LoadingConfig() throws KeeperException, InterruptedException {
 		final Map<String, Config> configs = Maps.newHashMap();
 		this.stat = new Stat();
-		List<String> cl = null;
-		try {
-			cl = zk.getChildren(zkBase, true);
-		} catch (KeeperException | InterruptedException e1) {
-			e1.printStackTrace();
-		}
+		List<String> cl = zk.getChildren(zkBase, true);
+
 		if (cl == null || cl.size() == 0) {
 			log.info("load config from zookeeper null");
 		} else {
 			for (String k : cl) {
 				String son = zkBase + '/' + k;
-				String confStr = null;
-				;
-
-				try {
-					confStr = new String(zk.getData(son, true, stat));
-				} catch (KeeperException | InterruptedException e) {
-					e.printStackTrace();
-				}
+				String confStr = new String(zk.getData(son, true, stat));
 
 				if (confStr != null && !confStr.isEmpty()) {
 					try {
@@ -155,8 +141,9 @@ public class ZkConfig implements Watcher {
 		return configs;
 	}
 
-	public void createFather() {
+	public void createFather() throws InterruptedException, KeeperException{
 		final String ip = Sailing.acceptIp.get();
+		fatherLock.lock();
 		try {
 			Stat tmpstat = this.zk.exists(zkBaseMonitor, false);
 			if (tmpstat == null) {
@@ -167,8 +154,8 @@ public class ZkConfig implements Watcher {
 			if (tmpstat == null) {
 				this.zk.create(zkBaseMonitor + "/" + ip, "".getBytes(), Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
 			}
-		} catch (KeeperException | InterruptedException e) {
-			e.printStackTrace();
+		}finally {
+			fatherLock.unlock();
 		}
 	}
 
@@ -179,7 +166,7 @@ public class ZkConfig implements Watcher {
 			String namePath = zkBaseMonitor + "/" + ip + "/" + name.replace('/', '.').substring(zkBase.length() + 1);
 			Stat tmpstat = this.zk.exists(namePath, false);
 			if (tmpstat != null) {
-				Thread.sleep(6000L);
+				Thread.sleep(8000L);
 				tmpstat = this.zk.exists(namePath, false);
 			}
 			if (tmpstat == null) {
@@ -189,7 +176,6 @@ public class ZkConfig implements Watcher {
 			return true;
 		} catch (KeeperException e) {
 			e.printStackTrace();
-			log.error("keeper Execption: retry!");
 			return false;
 		}
 	}
@@ -205,27 +191,37 @@ public class ZkConfig implements Watcher {
 			}
 			return true;
 		} catch (KeeperException e) {
-			log.error("keeper Execption: retry!");
 			e.printStackTrace();
 			return false;
 		}
 	}
 
-	public void handleExpare() {
+    /**
+     * the zookeeper is first create,if interrunpted, I will retry,
+     * if throws the zookeeper exception, I will re new the zkconfig
+     * @return
+     */
+	public boolean handleExpare() throws InterruptedException {
 		// add watch
 		try {
 			log.info("handling expare stat");
 			this.LoadingConfig();
 			for (String key : Sailing.threadMap.keySet()) {
-				this.register(key);
+				if(!this.register(key)){
+                    return false;
+                }
 			}
-		} catch (IOException e) {
-			e.printStackTrace();
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
+            return true;
+		} catch (KeeperException e) {
+            e.printStackTrace();
+            return false;
+        }
 	}
 
+    /**
+     * not care succc or not!
+     * @param name
+     */
 	public void heart(String name) {
 		final String ip = Sailing.acceptIp.get();
 		String namePath = zkBaseMonitor + "/" + ip + "/" + name.replace('/', '.').substring(zkBase.length() + 1);
@@ -234,7 +230,7 @@ public class ZkConfig implements Watcher {
 		} catch (KeeperException e1) {
 			e1.printStackTrace();
 		} catch (InterruptedException e) {
-			// fix bug
+			// fix bug, keep the inter state
 			log.info("when heart I recv a inter!");
 			Thread.currentThread().interrupt();
 		}

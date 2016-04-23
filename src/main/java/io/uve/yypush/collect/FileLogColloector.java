@@ -1,21 +1,15 @@
 package io.uve.yypush.collect;
 
 import io.uve.yypush.model.FileNode;
+import org.apache.log4j.Logger;
+import org.joda.time.DateTime;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousFileChannel;
-import java.nio.file.Files;
-import java.nio.file.LinkOption;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
+import java.nio.file.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
-import java.util.concurrent.TimeoutException;
-
-import org.apache.log4j.Logger;
-import org.joda.time.DateTime;
 
 /**
  * 
@@ -66,7 +60,7 @@ public class FileLogColloector extends Collector {
 		return true;
 	}
 
-	public void process() throws IOException, ExecutionException, TimeoutException {
+	public void process() throws IOException, ExecutionException {
 		while (true) {
 			int count = 0;
 			while (true) {
