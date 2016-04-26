@@ -50,7 +50,7 @@ public enum FileType {
 							if (lastModify.getMillisOfDay() > 61000) {
 								return true;
 							}
-							log.info("try next:not exist!");
+							log.info("try next:not arrive last modify!");
 						} catch (IOException e) {
 							return false;
 						}
@@ -130,7 +130,7 @@ public enum FileType {
 						if (lastModify.getMillisOfDay() > 61000) {
 							return true;
 						}
-						log.info("try next file: not exist!");
+						log.info("try next file: not arrive last modify!");
 					} catch (IOException e) {
 						return false;
 					}
