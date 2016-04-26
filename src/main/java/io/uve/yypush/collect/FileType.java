@@ -30,7 +30,7 @@ public enum FileType {
 	},
 	SUBREQ {
 		@Override
-		public boolean checkFile(long l, Config config) {
+		public boolean checkFile(long l, Config config) throws InterruptedException {
 			DateTime dateTime = new DateTime(l);
 			String date = dateTime.toString("_yyyy-MM-dd-HH");
 			Path startingDir = Paths.get(config.basePath + "/" + config.suffix + date);
@@ -50,6 +50,8 @@ public enum FileType {
 							if (lastModify.getMillisOfDay() > 61000) {
 								return true;
 							}
+							log.info("try next:not exist!");
+							Thread.sleep(1000L);
 						} catch (IOException e) {
 							return false;
 						}
@@ -61,7 +63,7 @@ public enum FileType {
 		}
 	},
 	DIR {
-		public boolean checkFile(long l, Config config) {
+		public boolean checkFile(long l, Config config) throws InterruptedException {
 			// except next hour!
 			l = l + HOUR;
 			DateTime dateTime = new DateTime(l);
@@ -80,6 +82,7 @@ public enum FileType {
 					e.printStackTrace();
 				}
 				log.info("try next file: not exist!");
+				Thread.sleep(1000L);
 			}
 			return false;
 		}
@@ -107,7 +110,7 @@ public enum FileType {
 		}
 	}
 
-	public boolean checkFile(long l, Config config) {
+	public boolean checkFile(long l, Config config) throws InterruptedException {
 		DateTime dateTime = new DateTime(l);
 		String date = dateTime.toString("_yyyy-MM-dd-HH");
 		Path startingDir = Paths.get(config.basePath + "/" + config.suffix + date + ".gz");
@@ -127,6 +130,8 @@ public enum FileType {
 						if (lastModify.getMillisOfDay() > 61000) {
 							return true;
 						}
+						log.info("try next file: not exist!");
+						Thread.sleep(1000L);
 					} catch (IOException e) {
 						return false;
 					}
