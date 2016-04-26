@@ -51,12 +51,12 @@ public enum FileType {
 								return true;
 							}
 							log.info("try next:not exist!");
-							Thread.sleep(1000L);
 						} catch (IOException e) {
 							return false;
 						}
 
 					}
+					Thread.sleep(1000L);
 				}
 			}
 			return false;
@@ -131,12 +131,11 @@ public enum FileType {
 							return true;
 						}
 						log.info("try next file: not exist!");
-						Thread.sleep(1000L);
 					} catch (IOException e) {
 						return false;
 					}
-
 				}
+				Thread.sleep(1000L);
 			}
 		}
 		return false;
