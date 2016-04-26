@@ -154,4 +154,17 @@ public class DirLogCollector extends Collector {
 		}
 		return true;
 	}
+
+	public void close(){
+		for(AsynchronousFileChannel channel: this.map.keySet()){
+			if(channel.isOpen()){
+				try {
+					channel.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+					log.info("close file failed");
+				}
+			}
+		}
+	}
 }

@@ -54,6 +54,7 @@ public class CollectorThread implements Runnable {
 				}else{
 					log.info("register failed and exit:" + config.name);
 				}
+				lc.close();
 			}
 		} catch (ExecutionException | IOException e) {
 			e.printStackTrace();

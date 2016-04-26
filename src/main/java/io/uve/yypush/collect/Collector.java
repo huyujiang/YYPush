@@ -62,6 +62,7 @@ public abstract class Collector {
 	public abstract boolean load(DateTime dateTime, boolean first) throws IOException;
 
 	public abstract void process() throws IOException, ExecutionException;
+	public abstract void close();
 
 	// must be thread safe
 	public static Collector build(Config config) throws IOException {

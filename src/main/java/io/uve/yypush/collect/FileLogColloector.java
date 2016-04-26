@@ -107,6 +107,20 @@ public class FileLogColloector extends Collector {
 		log.info("exit the thread!");
 	}
 
+	@Override
+	public void close() {
+		if(this.channel != null){
+			if(this.channel.isOpen()){
+				try {
+					this.channel.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+					log.info("close file failed");
+				}
+			}
+		}
+	}
+
 	private boolean loadNext() {
 		try {
 			load(false);
